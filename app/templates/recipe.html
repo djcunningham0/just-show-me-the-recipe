@@ -10,16 +10,6 @@ Recipe!{% endblock %} {% block content %}
             >
         </h1>
 
-        {% if recipe.prep_time or recipe.cook_time or recipe.servings %}
-        <div class="meta">
-            {% if recipe.prep_time %}<span>Prep: {{ recipe.prep_time }}</span>{%
-            endif %} {% if recipe.cook_time %}<span
-                >Cook: {{ recipe.cook_time }}</span
-            >{% endif %} {% if recipe.servings %}<span
-                >Servings: {{ recipe.servings }}</span
-            >{% endif %}
-        </div>
-        {% endif %}
     </header>
 
     <div class="recipe-content">
