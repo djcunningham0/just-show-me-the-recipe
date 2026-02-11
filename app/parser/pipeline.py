@@ -29,9 +29,13 @@ async def parse_recipe(url: str) -> Recipe:
     except httpx.ConnectError:
         raise ParseError("network", "Could not connect to the site. Check the URL.")
     except httpx.HTTPStatusError as e:
-        raise ParseError("http", f"Site returned an error (HTTP {e.response.status_code}).")
+        raise ParseError(
+            "http", f"Site returned an error (HTTP {e.response.status_code})."
+        )
     except httpx.RequestError:
-        raise ParseError("network", "Could not fetch the URL. Check the URL and try again.")
+        raise ParseError(
+            "network", "Could not fetch the URL. Check the URL and try again."
+        )
 
     html = response.text
 

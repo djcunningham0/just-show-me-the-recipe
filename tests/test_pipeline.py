@@ -6,7 +6,6 @@ from app.models import ParseError, Recipe
 from app.parser.structured import _normalize_instructions, extract_from_html
 from app.parser.scrapers import extract_with_scraper
 
-
 # -- Fixtures: sample HTML snippets --
 
 JSONLD_RECIPE_HTML = """
@@ -95,6 +94,7 @@ HOWTOSECTION_HTML = """
 
 # -- Tests: structured data extraction --
 
+
 def test_extract_jsonld_recipe():
     recipe = extract_from_html(JSONLD_RECIPE_HTML, "https://example.com/cookies")
     assert recipe is not None
@@ -116,7 +116,9 @@ def test_extract_jsonld_graph():
 
 
 def test_string_instructions_split():
-    recipe = extract_from_html(JSONLD_STRING_INSTRUCTIONS_HTML, "https://example.com/toast")
+    recipe = extract_from_html(
+        JSONLD_STRING_INSTRUCTIONS_HTML, "https://example.com/toast"
+    )
     assert recipe is not None
     assert len(recipe.steps) == 2
     assert recipe.steps[0] == "Toast the bread."
@@ -136,6 +138,7 @@ def test_no_recipe_returns_none():
 
 
 # -- Tests: normalize instructions --
+
 
 def test_normalize_howto_steps():
     raw = [
@@ -157,12 +160,16 @@ def test_normalize_single_string():
 
 # -- Tests: recipe-scrapers fallback --
 
+
 def test_scraper_no_recipe():
-    result = extract_with_scraper("https://example.com", "<html><body>Nothing</body></html>")
+    result = extract_with_scraper(
+        "https://example.com", "<html><body>Nothing</body></html>"
+    )
     assert result is None
 
 
 # -- Tests: error model --
+
 
 def test_parse_error():
     err = ParseError("network", "Timed out")
