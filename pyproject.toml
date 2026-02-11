@@ -16,7 +16,6 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "pytest-asyncio",
     "httpx",
 ]
 
@@ -24,6 +23,3 @@ dev = [
 preview = true
 enable-unstable-feature = ["hug_parens_with_braces_and_square_brackets"]
 color = true
-
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
