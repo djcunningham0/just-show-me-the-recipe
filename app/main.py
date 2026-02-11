@@ -36,7 +36,11 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     return templates.TemplateResponse(
         request,
         "error.html",
-        {"error_message": "You're sending too many requests. Please wait a moment and try again."},
+        {
+            "error_message": (
+                "You're sending too many requests. Please wait a moment and try again."
+            )
+        },
         status_code=429,
     )
 
@@ -76,6 +80,4 @@ async def recipe(request: Request, url: str = ""):
             request, "error.html", {"error_message": e.message}
         )
     logger.info("Served recipe %r from %s", result.title, url)
-    return templates.TemplateResponse(
-        request, "recipe.html", {"recipe": result}
-    )
+    return templates.TemplateResponse(request, "recipe.html", {"recipe": result})

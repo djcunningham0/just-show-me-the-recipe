@@ -2,7 +2,6 @@
 
 from app.parser.heuristic import extract_heuristic
 
-
 HEURISTIC_FULL_HTML = """
 <html>
 <head><title>Best Pancakes — My Food Blog</title></head>

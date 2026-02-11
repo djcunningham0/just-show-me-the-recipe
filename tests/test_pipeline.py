@@ -337,7 +337,11 @@ def _clear_cache():
 
 def _make_mock_response(html: str, status_code: int = 200) -> httpx.Response:
     """Create a mock httpx.Response with the given HTML content."""
-    return httpx.Response(status_code=status_code, text=html, request=httpx.Request("GET", "https://example.com"))
+    return httpx.Response(
+        status_code=status_code,
+        text=html,
+        request=httpx.Request("GET", "https://example.com"),
+    )
 
 
 @pytest.mark.anyio
