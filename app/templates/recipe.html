@@ -1,0 +1,57 @@
+{% extends "base.html" %} {% block title %}{{ recipe.title }} — Just Show Me the
+Recipe!{% endblock %} {% block content %}
+<a href="/" class="back-link">&larr; Try another recipe</a>
+
+<article class="recipe">
+    <h1>
+        <a href="{{ recipe.source_url }}" target="_blank" rel="noopener"
+            >{{ recipe.title }}</a
+        >
+    </h1>
+
+    {% if recipe.image_url %}
+    <img
+        src="{{ recipe.image_url }}"
+        alt="{{ recipe.title }}"
+        class="recipe-image"
+    />
+    {% endif %} {% if recipe.prep_time or recipe.cook_time or recipe.servings %}
+    <div class="meta">
+        {% if recipe.prep_time %}<span>Prep: {{ recipe.prep_time }}</span>{%
+        endif %} {% if recipe.cook_time %}<span
+            >Cook: {{ recipe.cook_time }}</span
+        >{% endif %} {% if recipe.servings %}<span
+            >Servings: {{ recipe.servings }}</span
+        >{% endif %}
+    </div>
+    {% endif %}
+
+    <section>
+        <h2>Ingredients</h2>
+        <ul class="checklist">
+            {% for item in recipe.ingredients %}
+            <li>
+                <label>
+                    <input type="checkbox" />
+                    <span>{{ item }}</span>
+                </label>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section>
+        <h2>Steps</h2>
+        <ol class="checklist steps">
+            {% for step in recipe.steps %}
+            <li>
+                <label>
+                    <input type="checkbox" />
+                    <span>{{ step }}</span>
+                </label>
+            </li>
+            {% endfor %}
+        </ol>
+    </section>
+</article>
+{% endblock %}
