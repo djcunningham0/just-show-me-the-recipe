@@ -12,11 +12,13 @@ dependencies = [
     "recipe-scrapers",
     "python-multipart",
     "slowapi",
+    "cachetools",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "anyio",
     "httpx",
 ]
 

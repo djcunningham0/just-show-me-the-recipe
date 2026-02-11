@@ -6,6 +6,7 @@ import socket
 from urllib.parse import urlparse
 
 import httpx
+from cachetools import TTLCache
 
 from app.models import ParseError, Recipe
 from app.parser.heuristic import extract_heuristic
@@ -13,6 +14,9 @@ from app.parser.scrapers import extract_with_scraper
 from app.parser.structured import extract_from_html
 
 logger = logging.getLogger(__name__)
+
+# In-memory cache: up to 128 recipes, 30-minute TTL
+_recipe_cache: TTLCache[str, Recipe] = TTLCache(maxsize=128, ttl=30 * 60)
 
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -64,6 +68,11 @@ def validate_url(url: str) -> None:
 
 async def parse_recipe(url: str) -> Recipe:
     """Fetch a URL and extract a recipe from it."""
+    cached = _recipe_cache.get(url)
+    if cached is not None:
+        logger.info("Cache hit for %s", url)
+        return cached
+
     logger.info("Parsing recipe from %s", url)
     validate_url(url)
     try:
@@ -98,6 +107,7 @@ async def parse_recipe(url: str) -> Recipe:
     recipe = extract_from_html(html, url)
     if recipe is not None:
         logger.info("Tier 1 (structured data) succeeded for %s", url)
+        _recipe_cache[url] = recipe
         return recipe
     logger.debug("Tier 1 (structured data) found nothing for %s", url)
 
@@ -105,6 +115,7 @@ async def parse_recipe(url: str) -> Recipe:
     recipe = extract_with_scraper(url, html)
     if recipe is not None:
         logger.info("Tier 2 (recipe-scrapers) succeeded for %s", url)
+        _recipe_cache[url] = recipe
         return recipe
     logger.debug("Tier 2 (recipe-scrapers) found nothing for %s", url)
 
@@ -112,6 +123,7 @@ async def parse_recipe(url: str) -> Recipe:
     recipe = extract_heuristic(html, url)
     if recipe is not None:
         logger.info("Tier 3 (heuristic) succeeded for %s", url)
+        _recipe_cache[url] = recipe
         return recipe
     logger.debug("Tier 3 (heuristic) found nothing for %s", url)
 

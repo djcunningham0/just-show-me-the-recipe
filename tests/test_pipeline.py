@@ -6,7 +6,7 @@ import httpx
 import pytest
 
 from app.models import ParseError, Recipe
-from app.parser.pipeline import parse_recipe
+from app.parser.pipeline import _recipe_cache, parse_recipe
 from app.parser.structured import (
     _normalize_instructions,
     _normalize_time,
@@ -329,6 +329,12 @@ def test_normalize_time_non_string():
 # -- Tests: pipeline orchestration (mocked HTTP) --
 
 
+@pytest.fixture(autouse=True)
+def _clear_cache():
+    """Clear the recipe cache before each test to avoid cross-test pollution."""
+    _recipe_cache.clear()
+
+
 def _make_mock_response(html: str, status_code: int = 200) -> httpx.Response:
     """Create a mock httpx.Response with the given HTML content."""
     return httpx.Response(status_code=status_code, text=html, request=httpx.Request("GET", "https://example.com"))
@@ -395,3 +401,19 @@ async def test_pipeline_http_error(mock_client_cls):
 
     with pytest.raises(ParseError, match="403"):
         await parse_recipe("https://example.com/blocked")
+
+
+@pytest.mark.anyio
+@patch("app.parser.pipeline.httpx.AsyncClient")
+async def test_pipeline_caches_result(mock_client_cls):
+    """Second call for the same URL returns cached result without fetching."""
+    mock_client = AsyncMock()
+    mock_client.get.return_value = _make_mock_response(JSONLD_RECIPE_HTML)
+    mock_client_cls.return_value.__aenter__.return_value = mock_client
+
+    first = await parse_recipe("https://example.com/cookies")
+    second = await parse_recipe("https://example.com/cookies")
+
+    assert first.title == second.title
+    # httpx.AsyncClient should only have been constructed once
+    assert mock_client_cls.call_count == 1
