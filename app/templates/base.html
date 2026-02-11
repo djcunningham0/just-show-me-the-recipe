@@ -5,8 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{% block title %}Just Show Me the Recipe!{% endblock %}</title>
         <link rel="stylesheet" href="/static/style.css" />
+        <script>
+            const t = localStorage.getItem("theme");
+            if (t) document.documentElement.dataset.theme = t;
+        </script>
     </head>
     <body>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode"></button>
         <div class="container">{% block content %}{% endblock %}</div>
         <script src="/static/app.js"></script>
     </body>
