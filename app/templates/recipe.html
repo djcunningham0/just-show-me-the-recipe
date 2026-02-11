@@ -28,10 +28,10 @@ Recipe!{% endblock %} {% block content %}
             <ul class="checklist">
                 {% for item in recipe.ingredients %}
                 <li>
-                    <label>
+                    <span class="check-item">
                         <input type="checkbox" />
                         <span>{{ item }}</span>
-                    </label>
+                    </span>
                 </li>
                 {% endfor %}
             </ul>
@@ -42,10 +42,10 @@ Recipe!{% endblock %} {% block content %}
             <ol class="checklist steps">
                 {% for step in recipe.steps %}
                 <li>
-                    <label>
+                    <span class="check-item">
                         <input type="checkbox" />
                         <span>{{ step }}</span>
-                    </label>
+                    </span>
                 </li>
                 {% endfor %}
             </ol>

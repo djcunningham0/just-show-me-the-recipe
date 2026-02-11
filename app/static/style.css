@@ -196,7 +196,7 @@ body {
     counter-increment: step;
 }
 
-.steps li label span::before {
+.steps li .check-item span::before {
     content: counter(step) ". ";
     font-weight: 600;
 }
@@ -206,11 +206,10 @@ body {
     border-bottom: 1px solid var(--color-border);
 }
 
-.checklist label {
+.checklist .check-item {
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
-    cursor: pointer;
 }
 
 .checklist input[type="checkbox"] {
@@ -226,7 +225,7 @@ body {
     background-color: var(--color-input-bg);
 }
 
-.checklist label.checked span {
+.checklist .check-item.checked span {
     text-decoration: line-through;
     color: var(--color-checked);
 }
