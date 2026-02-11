@@ -8,7 +8,7 @@ from app.models import Recipe
 def extract_with_scraper(url: str, html: str) -> Recipe | None:
     """Try to extract a Recipe using recipe-scrapers."""
     try:
-        scraper = scrape_html(html, org_url=url)
+        scraper = scrape_html(html, org_url=url, supported_only=False)
     except Exception:
         return None
 

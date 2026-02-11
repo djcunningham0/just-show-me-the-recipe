@@ -3,6 +3,7 @@
 import httpx
 
 from app.models import ParseError, Recipe
+from app.parser.heuristic import extract_heuristic
 from app.parser.scrapers import extract_with_scraper
 from app.parser.structured import extract_from_html
 
@@ -41,6 +42,11 @@ async def parse_recipe(url: str) -> Recipe:
 
     # Tier 2: recipe-scrapers
     recipe = extract_with_scraper(url, html)
+    if recipe is not None:
+        return recipe
+
+    # Tier 3: heuristic HTML parsing
+    recipe = extract_heuristic(html, url)
     if recipe is not None:
         return recipe
 
