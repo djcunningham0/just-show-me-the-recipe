@@ -38,6 +38,58 @@ document.addEventListener("change", function (e) {
     });
 })();
 
+// Recent recipes
+(function () {
+    const MAX_RECENT = 10;
+    const STORAGE_KEY = "recentRecipes";
+
+    function getRecent() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        } catch {
+            return [];
+        }
+    }
+
+    // On recipe page: save this recipe
+    const recipeEl = document.querySelector(".recipe");
+    if (recipeEl) {
+        const linkEl = recipeEl.querySelector("h1 a");
+        if (linkEl) {
+            const url = linkEl.href;
+            const title = linkEl.textContent.trim();
+            let recent = getRecent().filter((r) => r.url !== url);
+            recent.unshift({ url, title });
+            recent = recent.slice(0, MAX_RECENT);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(recent));
+        }
+    }
+
+    // On homepage: render recent list
+    const container = document.getElementById("recent-recipes");
+    if (container) {
+        const recent = getRecent();
+        if (recent.length === 0) return;
+
+        const heading = document.createElement("p");
+        heading.className = "recent-heading";
+        heading.textContent = "Recently Viewed";
+        container.appendChild(heading);
+
+        const list = document.createElement("ul");
+        list.className = "recent-list";
+        for (const { url, title } of recent) {
+            const li = document.createElement("li");
+            const a = document.createElement("a");
+            a.href = "/recipe?url=" + encodeURIComponent(url);
+            a.textContent = title;
+            li.appendChild(a);
+            list.appendChild(li);
+        }
+        container.appendChild(list);
+    }
+})();
+
 // Theme toggle
 const toggle = document.getElementById("theme-toggle");
 function updateToggleIcon() {
