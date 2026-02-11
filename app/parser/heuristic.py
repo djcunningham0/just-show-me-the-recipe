@@ -1,10 +1,13 @@
 """Tier 3: Heuristic extraction from unstructured HTML."""
 
+import logging
 import re
 
 from bs4 import BeautifulSoup
 
 from app.models import Recipe
+
+logger = logging.getLogger(__name__)
 
 _INGREDIENT_RE = re.compile(r"ingredients\s*:?", re.IGNORECASE)
 _INSTRUCTION_RE = re.compile(
@@ -20,6 +23,10 @@ def extract_heuristic(html: str, url: str) -> Recipe | None:
 
     ingredients = _find_list_after_label(soup, _INGREDIENT_RE)
     steps = _find_list_after_label(soup, _INSTRUCTION_RE)
+
+    logger.debug(
+        "Heuristic found %d ingredients, %d steps", len(ingredients), len(steps)
+    )
 
     if not ingredients and not steps:
         return None

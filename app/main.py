@@ -1,5 +1,6 @@
 """FastAPI application for Just Show Me the Recipe."""
 
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -13,6 +14,13 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.models import ParseError
 from app.parser.pipeline import parse_recipe
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-8s %(name)s — %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -45,13 +53,15 @@ async def index(request: Request):
 @limiter.limit("30/minute")
 async def recipe(request: Request, url: str):
     try:
-        recipe = await parse_recipe(url)
+        result = await parse_recipe(url)
     except ParseError as e:
+        logger.warning("ParseError [%s] for %s: %s", e.error_type, url, e.message)
         return templates.TemplateResponse(
             "error.html",
             {"request": request, "error_message": e.message},
         )
+    logger.info("Served recipe %r from %s", result.title, url)
     return templates.TemplateResponse(
         "recipe.html",
-        {"request": request, "recipe": recipe},
+        {"request": request, "recipe": result},
     )

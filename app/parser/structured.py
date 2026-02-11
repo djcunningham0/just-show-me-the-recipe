@@ -1,8 +1,12 @@
 """Tier 1: Extract recipe from Schema.org structured data via extruct."""
 
+import logging
+
 import extruct
 
 from app.models import Recipe
+
+logger = logging.getLogger(__name__)
 
 
 def extract_from_html(html: str, url: str) -> Recipe | None:
@@ -10,15 +14,21 @@ def extract_from_html(html: str, url: str) -> Recipe | None:
     data = extruct.extract(html, base_url=url, syntaxes=["json-ld", "microdata"])
 
     recipe_obj = _find_recipe_objects(data.get("json-ld", []))
+    source = "json-ld"
     if recipe_obj is None:
         recipe_obj = _find_recipe_objects(data.get("microdata", []))
+        source = "microdata"
     if recipe_obj is None:
+        logger.debug("No structured recipe data found")
         return None
+
+    logger.debug("Found recipe via %s", source)
 
     ingredients = recipe_obj.get("recipeIngredient", [])
     steps = _normalize_instructions(recipe_obj.get("recipeInstructions", []))
 
     if not ingredients and not steps:
+        logger.debug("Structured data had no ingredients or steps")
         return None
 
     # Handle image field (can be string, list, or dict)
