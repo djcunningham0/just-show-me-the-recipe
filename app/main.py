@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from fastapi import FastAPI, Form, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -22,8 +22,8 @@ async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@app.post("/parse", response_class=HTMLResponse)
-async def parse(request: Request, url: str = Form(...)):
+@app.get("/recipe", response_class=HTMLResponse)
+async def recipe(request: Request, url: str):
     try:
         recipe = await parse_recipe(url)
     except ParseError as e:
