@@ -9,7 +9,10 @@ Recipe!{% endblock %} {% block content %}
                 >{{ recipe.title }}</a
             >
         </h1>
-
+        <label class="wake-lock-toggle" id="wake-lock-toggle" hidden>
+            <input type="checkbox" id="wake-lock-checkbox" />
+            <span>Keep screen on</span>
+        </label>
     </header>
 
     <div class="recipe-content">
