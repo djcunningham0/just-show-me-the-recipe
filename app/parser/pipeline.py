@@ -10,6 +10,7 @@ from cachetools import TTLCache
 
 from app.models import ParseError, Recipe
 from app.parser.heuristic import extract_heuristic
+from app.parser.ingredients import enrich_recipe
 from app.parser.scrapers import extract_with_scraper
 from app.parser.structured import extract_from_html
 
@@ -118,29 +119,25 @@ async def parse_recipe(url: str) -> Recipe:
     )
     html = response.text
 
-    # Tier 1: structured data
-    recipe = extract_from_html(html, url)
-    if recipe is not None:
-        logger.info("Tier 1 (structured data) succeeded for %s", url)
-        _recipe_cache[url] = recipe
-        return recipe
-    logger.debug("Tier 1 (structured data) found nothing for %s", url)
+    # Try extraction tiers in order
+    tiers = [
+        ("Tier 1 (structured data)", lambda: extract_from_html(html, url)),
+        ("Tier 2 (recipe-scrapers)", lambda: extract_with_scraper(url, html)),
+        ("Tier 3 (heuristic)", lambda: extract_heuristic(html, url)),
+    ]
 
-    # Tier 2: recipe-scrapers
-    recipe = extract_with_scraper(url, html)
-    if recipe is not None:
-        logger.info("Tier 2 (recipe-scrapers) succeeded for %s", url)
-        _recipe_cache[url] = recipe
-        return recipe
-    logger.debug("Tier 2 (recipe-scrapers) found nothing for %s", url)
+    recipe = None
+    for name, extract in tiers:
+        recipe = extract()
+        if recipe is not None:
+            logger.info("%s succeeded for %s", name, url)
+            break
+        logger.debug("%s found nothing for %s", name, url)
 
-    # Tier 3: heuristic HTML parsing
-    recipe = extract_heuristic(html, url)
-    if recipe is not None:
-        logger.info("Tier 3 (heuristic) succeeded for %s", url)
-        _recipe_cache[url] = recipe
-        return recipe
-    logger.debug("Tier 3 (heuristic) found nothing for %s", url)
+    if recipe is None:
+        logger.warning("All tiers failed for %s", url)
+        raise ParseError("parse", "No recipe found on that page. Try a different URL.")
 
-    logger.warning("All tiers failed for %s", url)
-    raise ParseError("parse", "No recipe found on that page. Try a different URL.")
+    enrich_recipe(recipe)
+    _recipe_cache[url] = recipe
+    return recipe

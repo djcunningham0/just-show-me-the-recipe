@@ -3,6 +3,18 @@ import html
 from pydantic import BaseModel, model_validator
 
 
+class ParsedIngredient(BaseModel):
+    """Structured ingredient data extracted from a raw ingredient string."""
+
+    raw: str
+    amount: float | None = None
+    amount_max: float | None = None
+    unit: str | None = None
+    name: str
+    preparation: str | None = None
+    comment: str | None = None
+
+
 class Recipe(BaseModel):
     title: str
     source_url: str
@@ -11,6 +23,7 @@ class Recipe(BaseModel):
     cook_time: str | None = None
     image_url: str | None = None
     ingredients: list[str]
+    parsed_ingredients: list[ParsedIngredient] | None = None
     steps: list[str]
 
     @model_validator(mode="after")
