@@ -46,7 +46,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 
 @app.get("/recipe", response_class=HTMLResponse)
@@ -57,11 +57,9 @@ async def recipe(request: Request, url: str):
     except ParseError as e:
         logger.warning("ParseError [%s] for %s: %s", e.error_type, url, e.message)
         return templates.TemplateResponse(
-            "error.html",
-            {"request": request, "error_message": e.message},
+            request, "error.html", {"error_message": e.message}
         )
     logger.info("Served recipe %r from %s", result.title, url)
     return templates.TemplateResponse(
-        "recipe.html",
-        {"request": request, "recipe": result},
+        request, "recipe.html", {"recipe": result}
     )
