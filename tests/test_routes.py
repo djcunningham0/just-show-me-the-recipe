@@ -68,7 +68,14 @@ def test_recipe_network_error(mock_parse, client):
 
 def test_recipe_missing_url(client):
     resp = client.get("/recipe")
-    assert resp.status_code == 422  # FastAPI validation error
+    assert resp.status_code == 400
+    assert "Please enter a URL" in resp.text
+
+
+def test_recipe_empty_url(client):
+    resp = client.get("/recipe", params={"url": "  "})
+    assert resp.status_code == 400
+    assert "Please enter a URL" in resp.text
 
 
 # -- Security headers --

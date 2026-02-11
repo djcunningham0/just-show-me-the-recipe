@@ -53,7 +53,7 @@ def validate_url(url: str) -> None:
         addrinfos = socket.getaddrinfo(hostname, None)
     except socket.gaierror:
         logger.warning("DNS resolution failed for %s", hostname)
-        raise ParseError("network", "Could not resolve hostname.")
+        raise ParseError("network", "Couldn't find that website. Check the URL for typos.")
 
     for _, _, _, _, sockaddr in addrinfos:
         ip = ipaddress.ip_address(sockaddr[0])
@@ -88,16 +88,23 @@ async def parse_recipe(url: str) -> Recipe:
         raise ParseError("network", "Request timed out. The site may be slow or down.")
     except httpx.ConnectError:
         logger.warning("Connection error fetching %s", url)
-        raise ParseError("network", "Could not connect to the site. Check the URL.")
+        raise ParseError("network", "Couldn't connect to the site. It may be down or the URL may be wrong.")
     except httpx.HTTPStatusError as e:
-        logger.warning("HTTP %d from %s", e.response.status_code, url)
-        raise ParseError(
-            "http", f"Site returned an error (HTTP {e.response.status_code})."
-        )
+        status = e.response.status_code
+        logger.warning("HTTP %d from %s", status, url)
+        if status in (401, 403):
+            msg = "This site blocked the request. It may require a login or restrict automated access."
+        elif status == 404:
+            msg = "Page not found. Double-check the URL and make sure it points to a recipe page."
+        elif status >= 500:
+            msg = "The recipe site is having server issues. Try again in a few minutes."
+        else:
+            msg = f"The site returned an error (HTTP {status})."
+        raise ParseError("http", msg)
     except httpx.RequestError as e:
         logger.warning("Request error fetching %s: %s", url, e)
         raise ParseError(
-            "network", "Could not fetch the URL. Check the URL and try again."
+            "network", "Something went wrong fetching that page. Check the URL and try again."
         )
 
     logger.info("Fetched %s (HTTP %d, %d bytes)", url, response.status_code, len(response.text))

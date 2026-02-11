@@ -399,7 +399,7 @@ async def test_pipeline_http_error(mock_client_cls):
     mock_client.get.return_value = resp
     mock_client_cls.return_value.__aenter__.return_value = mock_client
 
-    with pytest.raises(ParseError, match="403"):
+    with pytest.raises(ParseError, match="blocked the request"):
         await parse_recipe("https://example.com/blocked")
 
 

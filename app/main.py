@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -27,9 +27,18 @@ BASE_DIR = Path(__file__).resolve().parent
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="Just Show Me the Recipe!")
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return templates.TemplateResponse(
+        request,
+        "error.html",
+        {"error_message": "You're sending too many requests. Please wait a moment and try again."},
+        status_code=429,
+    )
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -51,7 +60,14 @@ async def index(request: Request):
 
 @app.get("/recipe", response_class=HTMLResponse)
 @limiter.limit("30/minute")
-async def recipe(request: Request, url: str):
+async def recipe(request: Request, url: str = ""):
+    if not url.strip():
+        return templates.TemplateResponse(
+            request,
+            "error.html",
+            {"error_message": "Please enter a URL to extract a recipe from."},
+            status_code=400,
+        )
     try:
         result = await parse_recipe(url)
     except ParseError as e:
