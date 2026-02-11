@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+import html
+
+from pydantic import BaseModel, model_validator
 
 
 class Recipe(BaseModel):
@@ -10,6 +12,14 @@ class Recipe(BaseModel):
     image_url: str | None = None
     ingredients: list[str]
     steps: list[str]
+
+    @model_validator(mode="after")
+    def clean_text(self) -> "Recipe":
+        """Decode HTML entities and strip whitespace from text fields."""
+        self.title = html.unescape(self.title).strip()
+        self.ingredients = [html.unescape(s).strip() for s in self.ingredients]
+        self.steps = [html.unescape(s).strip() for s in self.steps]
+        return self
 
 
 class ParseError(Exception):
