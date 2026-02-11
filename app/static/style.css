@@ -218,7 +218,44 @@ body {
 
 .recipe h2 {
     font-size: 1.15rem;
+    margin-bottom: 0;
+}
+
+/* -- Scale controls -- */
+.ingredients-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 0.75rem;
+}
+
+.scale-controls {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.scale-btn {
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-input-bg);
+    color: var(--color-muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.4;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.scale-btn:hover {
+    border-color: var(--color-accent);
+    color: var(--color-text);
+}
+
+.scale-btn.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
 }
 
 /* -- Two-column recipe layout -- */

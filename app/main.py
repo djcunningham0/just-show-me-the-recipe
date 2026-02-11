@@ -1,10 +1,11 @@
 """FastAPI application for Just Show Me the Recipe."""
 
+import json
 import logging
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from slowapi import Limiter
@@ -80,4 +81,15 @@ async def recipe(request: Request, url: str = ""):
             request, "error.html", {"error_message": e.message}
         )
     logger.info("Served recipe %r from %s", result.title, url)
-    return templates.TemplateResponse(request, "recipe.html", {"recipe": result})
+    parsed_ingredients_json = ""
+    if result.parsed_ingredients:
+        parsed_ingredients_json = json.dumps({
+            "parsedIngredients": [
+                ing.model_dump() for ing in result.parsed_ingredients
+            ],
+        })
+    return templates.TemplateResponse(
+        request,
+        "recipe.html",
+        {"recipe": result, "parsed_ingredients_json": parsed_ingredients_json},
+    )
