@@ -157,10 +157,96 @@
         return false;
     }
 
+    // --- Inline highlighting helpers ---
+
+    function escapeHTML(text) {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+    }
+
+    // Find all match positions for a set of variants in text (case-insensitive).
+    // Returns sorted, non-overlapping [{start, end}] preferring longer matches.
+    function findMatchPositions(text, variants) {
+        var lowerText = text.toLowerCase();
+        var raw = [];
+        for (var i = 0; i < variants.length; i++) {
+            var escaped = variants[i].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            var re = new RegExp("\\b" + escaped + "\\b", "gi");
+            var match;
+            while ((match = re.exec(lowerText)) !== null) {
+                var baseWord = variants[i].replace(/e?s$/, "");
+                var prefixes =
+                    AMBIGUOUS_COMPOUNDS[variants[i]] ||
+                    AMBIGUOUS_COMPOUNDS[baseWord];
+                if (prefixes) {
+                    var before = lowerText.slice(0, match.index);
+                    var dominated = prefixes.some(function (prefix) {
+                        return new RegExp("\\b" + prefix + "\\s+$").test(before);
+                    });
+                    if (dominated) continue;
+                }
+                raw.push({
+                    start: match.index,
+                    end: match.index + match[0].length,
+                    len: match[0].length,
+                });
+            }
+        }
+        // Sort by length desc so longer matches win, then by start asc
+        raw.sort(function (a, b) {
+            return b.len - a.len || a.start - b.start;
+        });
+        // Greedily pick non-overlapping matches
+        var taken = [];
+        for (var k = 0; k < raw.length; k++) {
+            var overlaps = false;
+            for (var t = 0; t < taken.length; t++) {
+                if (raw[k].start < taken[t].end && raw[k].end > taken[t].start) {
+                    overlaps = true;
+                    break;
+                }
+            }
+            if (!overlaps) taken.push(raw[k]);
+        }
+        taken.sort(function (a, b) {
+            return a.start - b.start;
+        });
+        return taken;
+    }
+
+    // Build HTML with <mark> tags around matched positions.
+    // `originalText` is the raw text (not HTML-escaped); positions index into it.
+    function buildHighlightedHTML(originalText, positions) {
+        if (!positions.length) return escapeHTML(originalText);
+        var html = "";
+        var last = 0;
+        for (var i = 0; i < positions.length; i++) {
+            html += escapeHTML(originalText.slice(last, positions[i].start));
+            html +=
+                '<mark class="ing-highlight">' +
+                escapeHTML(
+                    originalText.slice(positions[i].start, positions[i].end),
+                ) +
+                "</mark>";
+            last = positions[i].end;
+        }
+        html += escapeHTML(originalText.slice(last));
+        return html;
+    }
+
+    // Get the text <span> inside a step <li> (the second span inside .check-item)
+    function getStepTextSpan(stepEl) {
+        var spans = stepEl.querySelectorAll(".check-item > span");
+        return spans.length ? spans[spans.length - 1] : null;
+    }
+
     // --- Build matching index ---
 
     var ingredientToSteps = [];
     var stepToIngredients = [];
+    var ingredientVariants = {}; // idx -> variants array
     var i, j;
 
     for (i = 0; i < ingredients.length; i++) {
@@ -177,6 +263,7 @@
 
         var variants = buildVariants(name);
         nameData.push({ idx: i, name: name, variants: variants, len: name.length });
+        ingredientVariants[i] = variants;
     }
     nameData.sort(function (a, b) {
         return b.len - a.len;
@@ -193,6 +280,14 @@
         }
     }
 
+    // Store original step text so we can restore after highlighting
+    var originalStepText = {};
+    stepEls.forEach(function (el) {
+        var idx = parseInt(el.dataset.stepIdx, 10);
+        var span = getStepTextSpan(el);
+        if (span) originalStepText[idx] = span.textContent;
+    });
+
     // --- Event handling ---
 
     var hasHover =
@@ -203,24 +298,79 @@
     // Store bound handlers so we can remove them on deactivate
     var boundHandlers = [];
 
+    // Apply inline <mark> highlights to a step for a set of ingredient indices
+    function applyInlineHighlights(stepIdx, ingIndices) {
+        var span = getStepTextSpan(stepEls[stepIdx]);
+        if (!span || !(stepIdx in originalStepText)) return;
+        var text = originalStepText[stepIdx];
+        // Collect all match positions across all requested ingredients
+        var allPositions = [];
+        for (var i = 0; i < ingIndices.length; i++) {
+            var v = ingredientVariants[ingIndices[i]];
+            if (!v) continue;
+            var positions = findMatchPositions(text, v);
+            for (var p = 0; p < positions.length; p++) {
+                allPositions.push(positions[p]);
+            }
+        }
+        // Deduplicate overlapping positions (prefer longer)
+        allPositions.sort(function (a, b) {
+            return (b.end - b.start) - (a.end - a.start) || a.start - b.start;
+        });
+        var merged = [];
+        for (var k = 0; k < allPositions.length; k++) {
+            var overlaps = false;
+            for (var m = 0; m < merged.length; m++) {
+                if (
+                    allPositions[k].start < merged[m].end &&
+                    allPositions[k].end > merged[m].start
+                ) {
+                    overlaps = true;
+                    break;
+                }
+            }
+            if (!overlaps) merged.push(allPositions[k]);
+        }
+        merged.sort(function (a, b) {
+            return a.start - b.start;
+        });
+        span.innerHTML = buildHighlightedHTML(text, merged);
+    }
+
+    function restoreStepText(stepIdx) {
+        var span = getStepTextSpan(stepEls[stepIdx]);
+        if (!span || !(stepIdx in originalStepText)) return;
+        span.textContent = originalStepText[stepIdx];
+    }
+
     function highlightIngredient(idx) {
         ingredientEls[idx].classList.add("linked-highlight");
         ingredientToSteps[idx].forEach(function (stepIdx) {
-            stepEls[stepIdx].classList.add("linked-highlight");
+            stepEls[stepIdx].classList.add("linked-highlight-step");
+            applyInlineHighlights(stepIdx, [idx]);
         });
     }
 
     function highlightStep(idx) {
-        stepEls[idx].classList.add("linked-highlight");
-        stepToIngredients[idx].forEach(function (ingIdx) {
+        var ingIndices = stepToIngredients[idx];
+        ingIndices.forEach(function (ingIdx) {
             ingredientEls[ingIdx].classList.add("linked-highlight");
         });
+        stepEls[idx].classList.add("linked-highlight-step");
+        applyInlineHighlights(idx, ingIndices);
     }
 
     function clearHighlights() {
         document.querySelectorAll(".linked-highlight").forEach(function (el) {
             el.classList.remove("linked-highlight");
         });
+        document
+            .querySelectorAll(".linked-highlight-step")
+            .forEach(function (el) {
+                el.classList.remove("linked-highlight-step");
+                var idx = parseInt(el.dataset.stepIdx, 10);
+                restoreStepText(idx);
+            });
     }
 
     function toggleIngredient(idx) {

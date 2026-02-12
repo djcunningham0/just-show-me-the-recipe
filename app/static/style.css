@@ -317,6 +317,7 @@ body {
     cursor: pointer;
 }
 
+/* Full-element highlight for ingredient list items */
 .linked-highlight {
     background: rgba(245, 158, 11, 0.15);
     transition: background 0.15s;
@@ -324,6 +325,28 @@ body {
 
 [data-theme="dark"] .linked-highlight {
     background: rgba(245, 158, 11, 0.2);
+}
+
+/* Subtle background on matched step list items */
+.linked-highlight-step {
+    background: rgba(245, 158, 11, 0.06);
+    transition: background 0.15s;
+}
+
+[data-theme="dark"] .linked-highlight-step {
+    background: rgba(245, 158, 11, 0.08);
+}
+
+/* Inline highlight on matched words within steps */
+.ing-highlight {
+    background: rgba(245, 158, 11, 0.3);
+    color: inherit;
+    border-radius: 2px;
+    padding: 0 1px;
+}
+
+[data-theme="dark"] .ing-highlight {
+    background: rgba(245, 158, 11, 0.35);
 }
 
 /* -- Two-column recipe layout -- */
