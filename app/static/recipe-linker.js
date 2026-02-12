@@ -79,7 +79,7 @@
     }
 
     var AMBIGUOUS_COMPOUNDS = {
-        "pepper": ["bell", "cayenne", "chili", "chile", "jalape"],
+        "pepper": ["bell", "cayenne", "chili", "chile", "jalape", "salt and"],
         "cream": ["ice"],
         "sauce": ["hot"],
         "oil": ["essential"],
