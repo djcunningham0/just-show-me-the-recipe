@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import httpx
 import pytest
 
-from app.models import ParseError, Recipe
+from app.models import ParseError
 from app.parser.pipeline import _recipe_cache, parse_recipe
 from app.parser.structured import (
     _normalize_instructions,
