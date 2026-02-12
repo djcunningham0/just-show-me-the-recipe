@@ -199,19 +199,27 @@ body {
     color: var(--color-muted);
 }
 
-/* -- Wake lock toggle -- */
-.wake-lock-toggle {
+/* -- Recipe toggles -- */
+.recipe-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-top: 0.75rem;
+}
+
+.wake-lock-toggle,
+.highlight-toggle {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    margin-top: 0.75rem;
     font-size: 0.85rem;
     color: var(--color-muted);
     cursor: pointer;
     user-select: none;
 }
 
-.wake-lock-toggle input[type="checkbox"] {
+.wake-lock-toggle input[type="checkbox"],
+.highlight-toggle input[type="checkbox"] {
     accent-color: var(--color-accent);
     cursor: pointer;
 }

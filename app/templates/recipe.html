@@ -9,10 +9,18 @@ Recipe!{% endblock %} {% block content %}
                 >{{ recipe.title }}</a
             >
         </h1>
-        <label class="wake-lock-toggle" id="wake-lock-toggle" hidden>
-            <input type="checkbox" id="wake-lock-checkbox" />
-            <span>Keep screen on</span>
-        </label>
+        <div class="recipe-toggles">
+            <label class="wake-lock-toggle" id="wake-lock-toggle" hidden>
+                <input type="checkbox" id="wake-lock-checkbox" />
+                <span>Keep screen on</span>
+            </label>
+            {% if recipe.parsed_ingredients %}
+            <label class="highlight-toggle">
+                <input type="checkbox" id="highlight-toggle-checkbox" />
+                <span>Highlight ingredients</span>
+            </label>
+            {% endif %}
+        </div>
     </header>
 
     <div class="recipe-content">

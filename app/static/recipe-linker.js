@@ -11,12 +11,28 @@
     var stepEls = document.querySelectorAll("li[data-step-idx]");
     if (!ingredientEls.length || !stepEls.length) return;
 
-    // --- Matching helpers (must be defined before use) ---
+    // --- Toggle state ---
 
-    // Modifiers that commonly prefix ingredient names but get dropped in
-    // recipe instructions. Curated from ingredient_parser's tagdict
-    // (JJ/VBN/RB categories). Excludes colors like "red", "black", "green"
-    // that are often essential to identity (e.g., "red pepper" ≠ "pepper").
+    var STORAGE_KEY = "highlightIngredients";
+    var toggleCheckbox = document.getElementById("highlight-toggle-checkbox");
+    var enabled = false;
+
+    if (toggleCheckbox) {
+        enabled = localStorage.getItem(STORAGE_KEY) === "true";
+        toggleCheckbox.checked = enabled;
+        toggleCheckbox.addEventListener("change", function () {
+            enabled = toggleCheckbox.checked;
+            localStorage.setItem(STORAGE_KEY, enabled);
+            if (enabled) {
+                activate();
+            } else {
+                deactivate();
+            }
+        });
+    }
+
+    // --- Matching helpers ---
+
     var MODIFIERS = [
         "salted", "unsalted", "dried", "fresh", "freshly", "cracked",
         "crushed", "ground", "light", "dark", "all purpose", "all-purpose",
@@ -27,7 +43,6 @@
         "heavy", "white", "low-fat", "nonfat", "reduced-fat",
     ];
 
-    // Sort longest-first so "all purpose" is stripped before "all"
     MODIFIERS.sort(function (a, b) {
         return b.length - a.length;
     });
@@ -63,10 +78,6 @@
         return variants;
     }
 
-    // Words that form different ingredients when preceded by certain
-    // qualifiers. Bare "pepper" still matches, but not when preceded by
-    // "bell" (which is a different ingredient). This avoids false positives
-    // while preserving true positives like "freshly cracked pepper".
     var AMBIGUOUS_COMPOUNDS = {
         "pepper": ["bell", "cayenne", "chili", "chile", "jalape"],
         "cream": ["ice"],
@@ -77,13 +88,11 @@
     function buildVariants(name) {
         var candidates = [name];
 
-        // Strip modifiers to get core name
         var coreName = stripModifiers(name);
         if (coreName !== name && coreName.length >= 3) {
             candidates.push(coreName);
         }
 
-        // Sub-phrases from core name (drop leading or trailing words)
         var words = coreName.split(/\s+/);
         if (words.length >= 2) {
             var tail = words.slice(1).join(" ");
@@ -106,7 +115,6 @@
             }
         }
 
-        // Generate plural/singular variants for each candidate
         var allVariants = [];
         for (var i = 0; i < candidates.length; i++) {
             var pv = pluralVariants(candidates[i]);
@@ -115,7 +123,6 @@
             }
         }
 
-        // Deduplicate, filter short strings
         var seen = {};
         return allVariants.filter(function (v) {
             if (v.length < 3 || seen[v]) return false;
@@ -136,8 +143,7 @@
         var re = new RegExp("\\b" + escaped + "\\b", "g");
         var match;
         while ((match = re.exec(text)) !== null) {
-            // Check if this is a false positive due to a disqualifying prefix
-            var baseWord = word.replace(/e?s$/, ""); // normalize plurals
+            var baseWord = word.replace(/e?s$/, "");
             var prefixes = AMBIGUOUS_COMPOUNDS[word] || AMBIGUOUS_COMPOUNDS[baseWord];
             if (prefixes) {
                 var before = text.slice(0, match.index);
@@ -164,7 +170,6 @@
         stepToIngredients.push([]);
     }
 
-    // Build name variants sorted longest-first for greedy matching
     var nameData = [];
     for (i = 0; i < ingredients.length; i++) {
         var name = (ingredients[i].name || "").toLowerCase().trim();
@@ -177,7 +182,6 @@
         return b.len - a.len;
     });
 
-    // Match each step against ingredient names
     for (j = 0; j < data.steps.length; j++) {
         var stepText = data.steps[j].toLowerCase();
         for (i = 0; i < nameData.length; i++) {
@@ -194,52 +198,10 @@
     var hasHover =
         window.matchMedia && window.matchMedia("(hover: hover)").matches;
 
-    ingredientEls.forEach(function (el) {
-        var idx = parseInt(el.dataset.index, 10);
-        if (!ingredientToSteps[idx] || !ingredientToSteps[idx].length) return;
-
-        el.classList.add("linkable");
-
-        if (hasHover) {
-            el.addEventListener("mouseenter", function () {
-                highlightIngredient(idx);
-            });
-            el.addEventListener("mouseleave", function () {
-                clearHighlights();
-            });
-        } else {
-            el.addEventListener("click", function (e) {
-                if (e.target.tagName === "INPUT") return;
-                e.preventDefault();
-                toggleIngredient(idx);
-            });
-        }
-    });
-
-    stepEls.forEach(function (el) {
-        var idx = parseInt(el.dataset.stepIdx, 10);
-        if (!stepToIngredients[idx] || !stepToIngredients[idx].length) return;
-
-        el.classList.add("linkable");
-
-        if (hasHover) {
-            el.addEventListener("mouseenter", function () {
-                highlightStep(idx);
-            });
-            el.addEventListener("mouseleave", function () {
-                clearHighlights();
-            });
-        } else {
-            el.addEventListener("click", function (e) {
-                if (e.target.tagName === "INPUT") return;
-                e.preventDefault();
-                toggleStep(idx);
-            });
-        }
-    });
-
     var activeIngredient = -1;
     var activeStep = -1;
+    // Store bound handlers so we can remove them on deactivate
+    var boundHandlers = [];
 
     function highlightIngredient(idx) {
         ingredientEls[idx].classList.add("linked-highlight");
@@ -285,5 +247,77 @@
         activeIngredient = -1;
         activeStep = idx;
         highlightStep(idx);
+    }
+
+    function activate() {
+        ingredientEls.forEach(function (el) {
+            var idx = parseInt(el.dataset.index, 10);
+            if (!ingredientToSteps[idx] || !ingredientToSteps[idx].length) return;
+
+            el.classList.add("linkable");
+
+            if (hasHover) {
+                var enter = function () { highlightIngredient(idx); };
+                var leave = function () { clearHighlights(); };
+                el.addEventListener("mouseenter", enter);
+                el.addEventListener("mouseleave", leave);
+                boundHandlers.push({ el: el, type: "mouseenter", fn: enter });
+                boundHandlers.push({ el: el, type: "mouseleave", fn: leave });
+            } else {
+                var click = function (e) {
+                    if (e.target.tagName === "INPUT") return;
+                    e.preventDefault();
+                    toggleIngredient(idx);
+                };
+                el.addEventListener("click", click);
+                boundHandlers.push({ el: el, type: "click", fn: click });
+            }
+        });
+
+        stepEls.forEach(function (el) {
+            var idx = parseInt(el.dataset.stepIdx, 10);
+            if (!stepToIngredients[idx] || !stepToIngredients[idx].length) return;
+
+            el.classList.add("linkable");
+
+            if (hasHover) {
+                var enter = function () { highlightStep(idx); };
+                var leave = function () { clearHighlights(); };
+                el.addEventListener("mouseenter", enter);
+                el.addEventListener("mouseleave", leave);
+                boundHandlers.push({ el: el, type: "mouseenter", fn: enter });
+                boundHandlers.push({ el: el, type: "mouseleave", fn: leave });
+            } else {
+                var click = function (e) {
+                    if (e.target.tagName === "INPUT") return;
+                    e.preventDefault();
+                    toggleStep(idx);
+                };
+                el.addEventListener("click", click);
+                boundHandlers.push({ el: el, type: "click", fn: click });
+            }
+        });
+    }
+
+    function deactivate() {
+        clearHighlights();
+        activeIngredient = -1;
+        activeStep = -1;
+
+        // Remove all event listeners
+        boundHandlers.forEach(function (h) {
+            h.el.removeEventListener(h.type, h.fn);
+        });
+        boundHandlers = [];
+
+        // Remove linkable class
+        document.querySelectorAll(".linkable").forEach(function (el) {
+            el.classList.remove("linkable");
+        });
+    }
+
+    // Initialize if enabled
+    if (enabled) {
+        activate();
     }
 })();
