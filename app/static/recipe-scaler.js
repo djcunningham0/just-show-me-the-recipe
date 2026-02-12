@@ -29,6 +29,47 @@
         updateIngredients(scale);
     });
 
+    // Fractions of a cup that aren't standard measuring cups (1/4, 1/3, 1/2, 2/3, 3/4, 1).
+    // Map fractional part → tbsp/tsp equivalent.
+    var CUP_CONVERSIONS = [
+        [1 / 8, "2 tbsp"],
+        [1 / 6, "2 tbsp + 2 tsp"],
+        [3 / 8, "\u00BC cup + 2 tbsp"],
+        [5 / 8, "\u00BD cup + 2 tbsp"],
+        [5 / 6, "\u2154 cup + 2 tbsp"],
+        [7 / 8, "\u00BE cup + 2 tbsp"],
+    ];
+
+    function isCupUnit(unit) {
+        return /^cups?\.?$/i.test((unit || "").trim());
+    }
+
+    function getCupConversion(amount, unit) {
+        if (!isCupUnit(unit)) return null;
+
+        var whole = Math.floor(amount);
+        var frac = amount - whole;
+        if (frac < 0.01) return null;
+
+        for (var i = 0; i < CUP_CONVERSIONS.length; i++) {
+            if (Math.abs(frac - CUP_CONVERSIONS[i][0]) < 0.03) {
+                var conversion = CUP_CONVERSIONS[i][1];
+                if (whole > 0) {
+                    conversion =
+                        whole + (whole === 1 ? " cup + " : " cups + ") + conversion;
+                }
+                return conversion;
+            }
+        }
+        return null;
+    }
+
+    function escapeHtml(str) {
+        var div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
     function updateIngredients(scale) {
         data.parsedIngredients.forEach(function (parsed, index) {
             var li = document.querySelector('li[data-index="' + index + '"]');
@@ -43,7 +84,22 @@
 
             var scaledAmount = parsed.amount * scale;
             var scaledMax = parsed.amount_max ? parsed.amount_max * scale : null;
-            textEl.textContent = formatIngredient(scaledAmount, scaledMax, parsed);
+            var conversion = getCupConversion(scaledAmount, parsed.unit);
+
+            if (conversion) {
+                textEl.innerHTML = formatIngredientHtml(
+                    scaledAmount,
+                    scaledMax,
+                    parsed,
+                    conversion
+                );
+            } else {
+                textEl.textContent = formatIngredient(
+                    scaledAmount,
+                    scaledMax,
+                    parsed
+                );
+            }
         });
     }
 
@@ -64,6 +120,35 @@
         return parts.join(" ");
     }
 
+    function formatIngredientHtml(amount, amountMax, parsed, conversion) {
+        var amountStr;
+        if (amountMax != null) {
+            amountStr = formatFraction(amount) + "-" + formatFraction(amountMax);
+        } else {
+            amountStr = formatFraction(amount);
+        }
+
+        var tipLabel =
+            escapeHtml(amountStr + (parsed.unit ? " " + parsed.unit : "")) +
+            " = " +
+            escapeHtml(conversion);
+
+        var tipContent =
+            '<span class="conversion-tip" data-tip="' +
+            tipLabel +
+            '">' +
+            escapeHtml(amountStr) +
+            (parsed.unit ? " " + escapeHtml(parsed.unit) : "") +
+            "</span>";
+
+        var rest = [];
+        rest.push(parsed.name);
+        if (parsed.preparation) rest.push(", " + parsed.preparation);
+        if (parsed.comment) rest.push(parsed.comment);
+
+        return tipContent + " " + escapeHtml(rest.join(" "));
+    }
+
     function formatFraction(n) {
         if (n < 0.01) return "0";
 
@@ -74,7 +159,9 @@
 
         // Common fractions with tolerance
         var fractions = [
+            [1 / 16, "1/16"],
             [1 / 8, "\u215B"],
+            [1 / 6, "\u2159"],
             [1 / 4, "\u00BC"],
             [1 / 3, "\u2153"],
             [3 / 8, "\u215C"],
@@ -82,6 +169,7 @@
             [5 / 8, "\u215D"],
             [2 / 3, "\u2154"],
             [3 / 4, "\u00BE"],
+            [5 / 6, "\u215A"],
             [7 / 8, "\u215E"],
         ];
 
