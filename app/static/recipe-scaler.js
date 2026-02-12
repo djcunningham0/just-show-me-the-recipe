@@ -59,7 +59,7 @@
         if (parsed.unit) parts.push(parsed.unit);
         parts.push(parsed.name);
         if (parsed.preparation) parts.push(", " + parsed.preparation);
-        if (parsed.comment) parts.push("(" + parsed.comment + ")");
+        if (parsed.comment) parts.push(parsed.comment);
 
         return parts.join(" ");
     }
