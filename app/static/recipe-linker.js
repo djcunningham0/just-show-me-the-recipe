@@ -63,6 +63,17 @@
         return variants;
     }
 
+    // Words that form different ingredients when preceded by certain
+    // qualifiers. Bare "pepper" still matches, but not when preceded by
+    // "bell" (which is a different ingredient). This avoids false positives
+    // while preserving true positives like "freshly cracked pepper".
+    var AMBIGUOUS_COMPOUNDS = {
+        "pepper": ["bell", "cayenne", "chili", "chile", "jalape"],
+        "cream": ["ice"],
+        "sauce": ["hot"],
+        "oil": ["essential"],
+    };
+
     function buildVariants(name) {
         var candidates = [name];
 
@@ -72,15 +83,26 @@
             candidates.push(coreName);
         }
 
-        // Sub-phrases from core name (drop leading words)
+        // Sub-phrases from core name (drop leading or trailing words)
         var words = coreName.split(/\s+/);
         if (words.length >= 2) {
-            candidates.push(words.slice(1).join(" "));
+            var tail = words.slice(1).join(" ");
+            if (tail.length >= 3) {
+                candidates.push(tail);
+            }
+            var head = words.slice(0, -1).join(" ");
+            if (head.length >= 3) {
+                candidates.push(head);
+            }
         }
         if (words.length >= 3) {
             var lastWord = words[words.length - 1];
             if (lastWord.length >= 3) {
                 candidates.push(lastWord);
+            }
+            var firstWord = words[0];
+            if (firstWord.length >= 3) {
+                candidates.push(firstWord);
             }
         }
 
@@ -111,8 +133,22 @@
 
     function wordBoundaryMatch(text, word) {
         var escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        var re = new RegExp("\\b" + escaped + "\\b");
-        return re.test(text);
+        var re = new RegExp("\\b" + escaped + "\\b", "g");
+        var match;
+        while ((match = re.exec(text)) !== null) {
+            // Check if this is a false positive due to a disqualifying prefix
+            var baseWord = word.replace(/e?s$/, ""); // normalize plurals
+            var prefixes = AMBIGUOUS_COMPOUNDS[word] || AMBIGUOUS_COMPOUNDS[baseWord];
+            if (prefixes) {
+                var before = text.slice(0, match.index);
+                var dominated = prefixes.some(function (prefix) {
+                    return new RegExp("\\b" + prefix + "\\s+$").test(before);
+                });
+                if (dominated) continue;
+            }
+            return true;
+        }
+        return false;
     }
 
     // --- Build matching index ---
