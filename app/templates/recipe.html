@@ -42,7 +42,7 @@ Recipe!{% endblock %} {% block content %}
             <h2>Steps</h2>
             <ol class="checklist steps">
                 {% for step in recipe.steps %}
-                <li>
+                <li data-step-idx="{{ loop.index0 }}">
                     <span class="check-item">
                         <input type="checkbox" />
                         <span>{{ step }}</span>

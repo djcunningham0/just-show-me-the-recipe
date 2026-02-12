@@ -304,6 +304,20 @@ body {
     }
 }
 
+/* -- Ingredient-to-step linking -- */
+.linkable {
+    cursor: pointer;
+}
+
+.linked-highlight {
+    background: rgba(245, 158, 11, 0.15);
+    transition: background 0.15s;
+}
+
+[data-theme="dark"] .linked-highlight {
+    background: rgba(245, 158, 11, 0.2);
+}
+
 /* -- Two-column recipe layout -- */
 .container:has(.recipe) {
     max-width: 960px;
