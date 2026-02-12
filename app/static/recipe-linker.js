@@ -78,8 +78,37 @@
         return variants;
     }
 
+    // Alternate spellings: each word maps to its known variants
+    var SPELLING_VARIANTS = {
+        "chili": ["chilli", "chile"],
+        "chilli": ["chili", "chile"],
+        "chile": ["chili", "chilli"],
+        "yogurt": ["yoghurt"],
+        "yoghurt": ["yogurt"],
+    };
+
+    // Generate alternate spellings for a phrase by substituting known variants
+    function spellingVariants(phrase) {
+        var words = phrase.split(/\s+/);
+        var results = [];
+        for (var i = 0; i < words.length; i++) {
+            var alts = SPELLING_VARIANTS[words[i]];
+            if (alts) {
+                for (var a = 0; a < alts.length; a++) {
+                    var copy = words.slice();
+                    copy[i] = alts[a];
+                    results.push(copy.join(" "));
+                }
+            }
+        }
+        return results;
+    }
+
     var AMBIGUOUS_COMPOUNDS = {
         "pepper": ["bell", "cayenne", "chili", "chile", "jalape", "salt and"],
+        "powder": ["cocoa", "baking", "garlic", "onion", "curry", "mustard",
+            "ginger", "turmeric", "cayenne", "paprika", "cumin", "cinnamon",
+            "chili", "chilli", "chile", "chipotle"],
         "cream": ["ice"],
         "sauce": ["hot"],
         "oil": ["essential"],
@@ -115,9 +144,18 @@
             }
         }
 
+        // Add alternate spellings for each candidate
+        var expanded = candidates.slice();
+        for (var s = 0; s < candidates.length; s++) {
+            var sv = spellingVariants(candidates[s]);
+            for (var t = 0; t < sv.length; t++) {
+                expanded.push(sv[t]);
+            }
+        }
+
         var allVariants = [];
-        for (var i = 0; i < candidates.length; i++) {
-            var pv = pluralVariants(candidates[i]);
+        for (var i = 0; i < expanded.length; i++) {
+            var pv = pluralVariants(expanded[i]);
             for (var j = 0; j < pv.length; j++) {
                 allVariants.push(pv[j]);
             }
