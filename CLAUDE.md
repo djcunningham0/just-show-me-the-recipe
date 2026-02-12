@@ -11,7 +11,7 @@ Web app that extracts recipes from URLs, stripping away blog content and ads. Bu
 - `app/parser/scrapers.py` — Tier 2: `recipe-scrapers` library fallback
 - `app/parser/heuristic.py` — Tier 3: pattern-matching fallback (looks for ingredients/instructions labels + lists)
 - `app/templates/` — Jinja2 templates (base, index, recipe, error)
-- `app/static/` — CSS + JS (dark mode, two-column layout, interactive checklists, recently viewed recipes, screen wake lock)
+- `app/static/` — CSS + JS (dark mode, two-column layout, interactive checklists, recently viewed recipes, screen wake lock, recipe scaling)
 
 ## Commands
 - Run: `python -m uvicorn app.main:app --reload`
@@ -20,4 +20,4 @@ Web app that extracts recipes from URLs, stripping away blog content and ads. Bu
 
 ## Current status
 - Phase 1 complete: URL input → fetch & parse → display recipe, dark mode, responsive two-column layout
-- Phase 2 planned: ingredient parsing (NLP), serving size scaling, ingredient-to-step linking
+- Phase 2 in progress: recipe scaling (0.5x–3x) complete; ingredient parsing (NLP) and ingredient-to-step linking planned

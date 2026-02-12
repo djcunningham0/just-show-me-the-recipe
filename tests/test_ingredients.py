@@ -1,6 +1,5 @@
 """Tests for ingredient string parsing."""
 
-
 from app.models import ParsedIngredient, Recipe
 from app.parser.ingredients import _parse_single, enrich_recipe
 

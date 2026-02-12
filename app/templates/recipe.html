@@ -17,13 +17,21 @@ Recipe!{% endblock %} {% block content %}
 
     <div class="recipe-content">
         <section class="ingredients-column">
-            <h2>Ingredients</h2>
+            <div class="ingredients-header">
+                <h2>Ingredients</h2>
+                <div class="scale-controls" id="scale-controls" hidden>
+                    <button class="scale-btn" data-scale="0.5">&frac12;x</button>
+                    <button class="scale-btn active" data-scale="1">1x</button>
+                    <button class="scale-btn" data-scale="2">2x</button>
+                    <button class="scale-btn" data-scale="3">3x</button>
+                </div>
+            </div>
             <ul class="checklist">
                 {% for item in recipe.ingredients %}
-                <li>
+                <li data-index="{{ loop.index0 }}">
                     <span class="check-item">
                         <input type="checkbox" />
-                        <span>{{ item }}</span>
+                        <span class="ingredient-text">{{ item }}</span>
                     </span>
                 </li>
                 {% endfor %}
@@ -45,4 +53,10 @@ Recipe!{% endblock %} {% block content %}
         </section>
     </div>
 </article>
+
+{% if recipe.parsed_ingredients %}
+<script id="recipe-data" type="application/json">
+{{ parsed_ingredients_json | safe }}
+</script>
+{% endif %}
 {% endblock %}
