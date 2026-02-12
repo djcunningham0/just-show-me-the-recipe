@@ -21,6 +21,8 @@ dev = [
     "pytest",
     "anyio",
     "httpx",
+    "black",
+    "ruff",
 ]
 
 [tool.black]
