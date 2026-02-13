@@ -114,6 +114,16 @@
         "oil": ["essential"],
     };
 
+    function isAmbiguousMatch(text, word, matchIndex) {
+        var baseWord = word.replace(/e?s$/, "");
+        var prefixes = AMBIGUOUS_COMPOUNDS[word] || AMBIGUOUS_COMPOUNDS[baseWord];
+        if (!prefixes) return false;
+        var before = text.slice(0, matchIndex);
+        return prefixes.some(function (prefix) {
+            return new RegExp("\\b" + prefix + "\\s+$").test(before);
+        });
+    }
+
     function buildVariants(name) {
         var candidates = [name];
 
@@ -169,32 +179,6 @@
         });
     }
 
-    function matchesAny(text, variants) {
-        for (var i = 0; i < variants.length; i++) {
-            if (wordBoundaryMatch(text, variants[i])) return true;
-        }
-        return false;
-    }
-
-    function wordBoundaryMatch(text, word) {
-        var escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        var re = new RegExp("\\b" + escaped + "\\b", "g");
-        var match;
-        while ((match = re.exec(text)) !== null) {
-            var baseWord = word.replace(/e?s$/, "");
-            var prefixes = AMBIGUOUS_COMPOUNDS[word] || AMBIGUOUS_COMPOUNDS[baseWord];
-            if (prefixes) {
-                var before = text.slice(0, match.index);
-                var dominated = prefixes.some(function (prefix) {
-                    return new RegExp("\\b" + prefix + "\\s+$").test(before);
-                });
-                if (dominated) continue;
-            }
-            return true;
-        }
-        return false;
-    }
-
     // --- Inline highlighting helpers ---
 
     function escapeHTML(text) {
@@ -214,17 +198,7 @@
             var re = new RegExp("\\b" + escaped + "\\b", "gi");
             var match;
             while ((match = re.exec(lowerText)) !== null) {
-                var baseWord = variants[i].replace(/e?s$/, "");
-                var prefixes =
-                    AMBIGUOUS_COMPOUNDS[variants[i]] ||
-                    AMBIGUOUS_COMPOUNDS[baseWord];
-                if (prefixes) {
-                    var before = lowerText.slice(0, match.index);
-                    var dominated = prefixes.some(function (prefix) {
-                        return new RegExp("\\b" + prefix + "\\s+$").test(before);
-                    });
-                    if (dominated) continue;
-                }
+                if (isAmbiguousMatch(lowerText, variants[i], match.index)) continue;
                 raw.push({
                     start: match.index,
                     end: match.index + match[0].length,
@@ -311,7 +285,7 @@
         var stepText = data.steps[j].toLowerCase();
         for (i = 0; i < nameData.length; i++) {
             var nd = nameData[i];
-            if (matchesAny(stepText, nd.variants)) {
+            if (findMatchPositions(stepText, nd.variants).length) {
                 ingredientToSteps[nd.idx].push(j);
                 stepToIngredients[j].push(nd.idx);
             }
@@ -341,38 +315,17 @@
         var span = getStepTextSpan(stepEls[stepIdx]);
         if (!span || !(stepIdx in originalStepText)) return;
         var text = originalStepText[stepIdx];
-        // Collect all match positions across all requested ingredients
-        var allPositions = [];
+        // Collect all variants across requested ingredients
+        var allVariants = [];
         for (var i = 0; i < ingIndices.length; i++) {
             var v = ingredientVariants[ingIndices[i]];
             if (!v) continue;
-            var positions = findMatchPositions(text, v);
-            for (var p = 0; p < positions.length; p++) {
-                allPositions.push(positions[p]);
+            for (var j = 0; j < v.length; j++) {
+                allVariants.push(v[j]);
             }
         }
-        // Deduplicate overlapping positions (prefer longer)
-        allPositions.sort(function (a, b) {
-            return (b.end - b.start) - (a.end - a.start) || a.start - b.start;
-        });
-        var merged = [];
-        for (var k = 0; k < allPositions.length; k++) {
-            var overlaps = false;
-            for (var m = 0; m < merged.length; m++) {
-                if (
-                    allPositions[k].start < merged[m].end &&
-                    allPositions[k].end > merged[m].start
-                ) {
-                    overlaps = true;
-                    break;
-                }
-            }
-            if (!overlaps) merged.push(allPositions[k]);
-        }
-        merged.sort(function (a, b) {
-            return a.start - b.start;
-        });
-        span.innerHTML = buildHighlightedHTML(text, merged);
+        var positions = findMatchPositions(text, allVariants);
+        span.innerHTML = buildHighlightedHTML(text, positions);
     }
 
     function restoreStepText(stepIdx) {

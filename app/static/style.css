@@ -207,8 +207,7 @@ body {
     margin-top: 0.75rem;
 }
 
-.wake-lock-toggle,
-.highlight-toggle {
+.recipe-toggle {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -218,8 +217,7 @@ body {
     user-select: none;
 }
 
-.wake-lock-toggle input[type="checkbox"],
-.highlight-toggle input[type="checkbox"] {
+.recipe-toggle input[type="checkbox"] {
     accent-color: var(--color-accent);
     cursor: pointer;
 }
