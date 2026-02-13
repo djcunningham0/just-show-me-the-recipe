@@ -199,26 +199,152 @@ body {
     color: var(--color-muted);
 }
 
-/* -- Wake lock toggle -- */
-.wake-lock-toggle {
+/* -- Recipe toggles -- */
+.recipe-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-top: 0.75rem;
+}
+
+.recipe-toggle {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    margin-top: 0.75rem;
     font-size: 0.85rem;
     color: var(--color-muted);
     cursor: pointer;
     user-select: none;
 }
 
-.wake-lock-toggle input[type="checkbox"] {
+.recipe-toggle input[type="checkbox"] {
     accent-color: var(--color-accent);
     cursor: pointer;
 }
 
 .recipe h2 {
     font-size: 1.15rem;
+    margin-bottom: 0;
+}
+
+/* -- Scale controls -- */
+.ingredients-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 0.75rem;
+}
+
+.scale-controls {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.scale-btn {
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-input-bg);
+    color: var(--color-muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.4;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.scale-btn:hover {
+    border-color: var(--color-accent);
+    color: var(--color-text);
+}
+
+.scale-btn.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+}
+
+/* -- Conversion tooltips for unusual cup fractions -- */
+.conversion-tip {
+    position: relative;
+    border-bottom: 1px dotted var(--color-muted);
+    cursor: help;
+}
+
+.conversion-tip::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.3rem 0.6rem;
+    background: var(--color-text);
+    color: var(--color-bg);
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    border-radius: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+}
+
+.conversion-tip:hover::after,
+.conversion-tip:focus::after {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .conversion-tip::after {
+        content: " (" attr(data-tip) ")";
+        opacity: 1;
+        position: static;
+        transform: none;
+        display: inline;
+        background: none;
+        color: var(--color-muted);
+        padding: 0;
+        border-radius: 0;
+        font-weight: 400;
+    }
+}
+
+/* -- Ingredient-to-step linking -- */
+.linkable {
+    cursor: pointer;
+}
+
+/* Full-element highlight for ingredient list items */
+.linked-highlight {
+    background: rgba(245, 158, 11, 0.15);
+    transition: background 0.15s;
+}
+
+[data-theme="dark"] .linked-highlight {
+    background: rgba(245, 158, 11, 0.2);
+}
+
+/* Subtle background on matched step list items */
+.linked-highlight-step {
+    background: rgba(245, 158, 11, 0.06);
+    transition: background 0.15s;
+}
+
+[data-theme="dark"] .linked-highlight-step {
+    background: rgba(245, 158, 11, 0.08);
+}
+
+/* Inline highlight on matched words within steps */
+.ing-highlight {
+    background: rgba(245, 158, 11, 0.3);
+    color: inherit;
+    border-radius: 2px;
+    padding: 0 1px;
+}
+
+[data-theme="dark"] .ing-highlight {
+    background: rgba(245, 158, 11, 0.35);
 }
 
 /* -- Two-column recipe layout -- */

@@ -9,21 +9,37 @@ Recipe!{% endblock %} {% block content %}
                 >{{ recipe.title }}</a
             >
         </h1>
-        <label class="wake-lock-toggle" id="wake-lock-toggle" hidden>
-            <input type="checkbox" id="wake-lock-checkbox" />
-            <span>Keep screen on</span>
-        </label>
+        <div class="recipe-toggles">
+            <label class="recipe-toggle" id="wake-lock-toggle" hidden>
+                <input type="checkbox" id="wake-lock-checkbox" />
+                <span>Keep screen on</span>
+            </label>
+            {% if recipe.parsed_ingredients %}
+            <label class="recipe-toggle">
+                <input type="checkbox" id="highlight-toggle-checkbox" />
+                <span>Highlight ingredients</span>
+            </label>
+            {% endif %}
+        </div>
     </header>
 
     <div class="recipe-content">
         <section class="ingredients-column">
-            <h2>Ingredients</h2>
+            <div class="ingredients-header">
+                <h2>Ingredients</h2>
+                <div class="scale-controls" id="scale-controls" hidden>
+                    <button class="scale-btn" data-scale="0.5">&frac12;x</button>
+                    <button class="scale-btn active" data-scale="1">1x</button>
+                    <button class="scale-btn" data-scale="2">2x</button>
+                    <button class="scale-btn" data-scale="3">3x</button>
+                </div>
+            </div>
             <ul class="checklist">
                 {% for item in recipe.ingredients %}
-                <li>
+                <li data-index="{{ loop.index0 }}">
                     <span class="check-item">
                         <input type="checkbox" />
-                        <span>{{ item }}</span>
+                        <span class="ingredient-text">{{ item }}</span>
                     </span>
                 </li>
                 {% endfor %}
@@ -34,7 +50,7 @@ Recipe!{% endblock %} {% block content %}
             <h2>Steps</h2>
             <ol class="checklist steps">
                 {% for step in recipe.steps %}
-                <li>
+                <li data-step-idx="{{ loop.index0 }}">
                     <span class="check-item">
                         <input type="checkbox" />
                         <span>{{ step }}</span>
@@ -45,4 +61,10 @@ Recipe!{% endblock %} {% block content %}
         </section>
     </div>
 </article>
+
+{% if recipe.parsed_ingredients %}
+<script id="recipe-data" type="application/json">
+{{ parsed_ingredients_json | safe }}
+</script>
+{% endif %}
 {% endblock %}

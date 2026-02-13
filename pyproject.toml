@@ -13,6 +13,7 @@ dependencies = [
     "python-multipart",
     "slowapi",
     "cachetools",
+    "ingredient-parser-nlp",
 ]
 
 [project.optional-dependencies]
@@ -20,6 +21,8 @@ dev = [
     "pytest",
     "anyio",
     "httpx",
+    "black",
+    "ruff",
 ]
 
 [tool.black]
