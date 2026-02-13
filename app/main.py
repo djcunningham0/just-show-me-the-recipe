@@ -87,6 +87,7 @@ async def recipe(request: Request, url: str = ""):
             "parsedIngredients": [
                 ing.model_dump() for ing in result.parsed_ingredients
             ],
+            "steps": result.steps,
         })
     return templates.TemplateResponse(
         request,

@@ -199,19 +199,25 @@ body {
     color: var(--color-muted);
 }
 
-/* -- Wake lock toggle -- */
-.wake-lock-toggle {
+/* -- Recipe toggles -- */
+.recipe-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-top: 0.75rem;
+}
+
+.recipe-toggle {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    margin-top: 0.75rem;
     font-size: 0.85rem;
     color: var(--color-muted);
     cursor: pointer;
     user-select: none;
 }
 
-.wake-lock-toggle input[type="checkbox"] {
+.recipe-toggle input[type="checkbox"] {
     accent-color: var(--color-accent);
     cursor: pointer;
 }
@@ -302,6 +308,43 @@ body {
         border-radius: 0;
         font-weight: 400;
     }
+}
+
+/* -- Ingredient-to-step linking -- */
+.linkable {
+    cursor: pointer;
+}
+
+/* Full-element highlight for ingredient list items */
+.linked-highlight {
+    background: rgba(245, 158, 11, 0.15);
+    transition: background 0.15s;
+}
+
+[data-theme="dark"] .linked-highlight {
+    background: rgba(245, 158, 11, 0.2);
+}
+
+/* Subtle background on matched step list items */
+.linked-highlight-step {
+    background: rgba(245, 158, 11, 0.06);
+    transition: background 0.15s;
+}
+
+[data-theme="dark"] .linked-highlight-step {
+    background: rgba(245, 158, 11, 0.08);
+}
+
+/* Inline highlight on matched words within steps */
+.ing-highlight {
+    background: rgba(245, 158, 11, 0.3);
+    color: inherit;
+    border-radius: 2px;
+    padding: 0 1px;
+}
+
+[data-theme="dark"] .ing-highlight {
+    background: rgba(245, 158, 11, 0.35);
 }
 
 /* -- Two-column recipe layout -- */
