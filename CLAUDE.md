@@ -18,6 +18,13 @@ Web app that extracts recipes from URLs, stripping away blog content and ads. Bu
 - `app/static/recipe-scaler.js` — Client-side recipe scaling (0.5x–3x)
 - `app/static/recipe-linker.js` — Ingredient-to-step highlighting with fuzzy matching
 
+## Deployment
+
+- Hosted on Render (free tier), deployed via Docker
+- `Dockerfile` — Python 3.13-slim, installs from `pyproject.toml`, runs uvicorn on port 10000
+- `render.yaml` — Render blueprint config (free plan, Docker runtime)
+- `.dockerignore` — excludes venv, caches, IDE files, `.git` from image
+
 ## Commands
 
 - Run: `python -m uvicorn app.main:app --reload`
