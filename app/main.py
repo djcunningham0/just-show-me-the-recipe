@@ -66,13 +66,16 @@ async def index(request: Request):
 @app.get("/recipe", response_class=HTMLResponse)
 @limiter.limit("30/minute")
 async def recipe(request: Request, url: str = ""):
-    if not url.strip():
+    url = url.strip()
+    if not url:
         return templates.TemplateResponse(
             request,
             "error.html",
             {"error_message": "Please enter a URL to extract a recipe from."},
             status_code=400,
         )
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
     try:
         result = await parse_recipe(url)
     except ParseError as e:
