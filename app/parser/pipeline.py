@@ -37,7 +37,7 @@ _BLOCKED_NETWORKS = [
 ]
 
 
-def validate_url(url: str) -> None:
+def validate_url(url: str, request_host: str | None = None) -> None:
     """Validate URL scheme and block requests to private/reserved IPs."""
     parsed = urlparse(url)
 
@@ -49,6 +49,10 @@ def validate_url(url: str) -> None:
     if not hostname:
         logger.warning("Rejected URL with no hostname: %s", url)
         raise ParseError("validation", "Invalid URL.")
+
+    if request_host and hostname.lower() == request_host.lower():
+        logger.warning("Blocked recursive URL: %s", url)
+        raise ParseError("validation", "Nice try! You can't extract a recipe from this site.")
 
     try:
         addrinfos = socket.getaddrinfo(hostname, None)
@@ -69,7 +73,7 @@ def validate_url(url: str) -> None:
                 )
 
 
-async def parse_recipe(url: str) -> Recipe:
+async def parse_recipe(url: str, request_host: str | None = None) -> Recipe:
     """Fetch a URL and extract a recipe from it."""
     cached = _recipe_cache.get(url)
     if cached is not None:
@@ -77,7 +81,7 @@ async def parse_recipe(url: str) -> Recipe:
         return cached
 
     logger.info("Parsing recipe from %s", url)
-    validate_url(url)
+    validate_url(url, request_host)
     try:
         async with httpx.AsyncClient(
             timeout=10.0,
