@@ -20,11 +20,12 @@ def _parse_single(raw: str) -> ParsedIngredient:
     """Parse a single ingredient string, falling back to raw on failure."""
     try:
         result = parse_ingredient(raw)
+        amt = _find_primary_amount(result)
         return ParsedIngredient(
             raw=raw,
-            amount=_extract_amount(result),
-            amount_max=_extract_amount_max(result),
-            unit=_extract_unit(result),
+            amount=_extract_amount(amt),
+            amount_max=_extract_amount_max(amt),
+            unit=_extract_unit(amt),
             name=_extract_name(result),
             preparation=_extract_text(result.preparation),
             comment=_extract_text(result.comment),
@@ -34,28 +35,40 @@ def _parse_single(raw: str) -> ParsedIngredient:
         return ParsedIngredient(raw=raw, name=raw)
 
 
-def _extract_amount(result) -> float | None:
+def _find_primary_amount(result):
+    """Return the first amount entry that has a real numeric quantity.
+
+    The NLP parser can return multiple entries — e.g. "Heaping 1/3 cup" yields
+    one for "Heaping" (empty quantity) and one for "1/3 cup".  We skip entries
+    whose quantity is empty or None so the actual number is used for scaling.
+    """
+    if not result.amount:
+        return None
+    for amt in result.amount:
+        if amt.quantity != "" and amt.quantity is not None:
+            return amt
+    return None
+
+
+def _extract_amount(amt) -> float | None:
     """Extract primary quantity as float."""
-    if not result.amount:
+    if amt is None:
         return None
-    return _fraction_to_float(result.amount[0].quantity)
+    return _fraction_to_float(amt.quantity)
 
 
-def _extract_amount_max(result) -> float | None:
+def _extract_amount_max(amt) -> float | None:
     """Extract max quantity for ranges (e.g., '2-3 cloves')."""
-    if not result.amount:
-        return None
-    amt = result.amount[0]
-    if not amt.RANGE:
+    if amt is None or not amt.RANGE:
         return None
     return _fraction_to_float(amt.quantity_max)
 
 
-def _extract_unit(result) -> str | None:
+def _extract_unit(amt) -> str | None:
     """Extract unit as a plain string."""
-    if not result.amount:
+    if amt is None:
         return None
-    unit = result.amount[0].unit
+    unit = amt.unit
     if not unit or unit == "":
         return None
     return str(unit)
