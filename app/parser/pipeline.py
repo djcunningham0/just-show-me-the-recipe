@@ -52,7 +52,9 @@ def validate_url(url: str, request_host: str | None = None) -> None:
 
     if request_host and hostname.lower() == request_host.lower():
         logger.warning("Blocked recursive URL: %s", url)
-        raise ParseError("validation", "Nice try! You can't extract a recipe from this site.")
+        raise ParseError(
+            "validation", "Nice try! You can't extract a recipe from this site."
+        )
 
     try:
         addrinfos = socket.getaddrinfo(hostname, None)
