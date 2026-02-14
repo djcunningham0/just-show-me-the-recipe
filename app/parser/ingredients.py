@@ -64,14 +64,21 @@ def _extract_amount_max(amt) -> float | None:
     return _fraction_to_float(amt.quantity_max)
 
 
+_UNIT_NORMALIZE = {
+    "tbsps": "tbsp",
+    "tsps": "tsp",
+}
+
+
 def _extract_unit(amt) -> str | None:
-    """Extract unit as a plain string."""
+    """Extract unit as a plain string, normalizing common abbreviations."""
     if amt is None:
         return None
     unit = amt.unit
     if not unit or unit == "":
         return None
-    return str(unit)
+    unit = str(unit)
+    return _UNIT_NORMALIZE.get(unit.lower(), unit)
 
 
 def _extract_name(result) -> str:

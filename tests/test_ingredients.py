@@ -80,6 +80,13 @@ def test_scaling_range_half():
     assert scaled_max == 1.5
 
 
+def test_parse_normalizes_capitalized_tbsp():
+    """Capitalized 'Tbsp' is parsed by NLP as raw 'Tbsps'; we normalize to 'tbsp'."""
+    result = _parse_single("2 Tbsp olive oil")
+    assert result.unit == "tbsp"
+    assert result.amount == 2.0
+
+
 def test_parse_fallback_on_empty_string():
     result = _parse_single("")
     assert result.raw == ""

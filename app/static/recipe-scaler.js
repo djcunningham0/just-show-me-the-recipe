@@ -40,8 +40,25 @@
         [7 / 8, "\u00BE cup + 2 tbsp"],
     ];
 
+    // Standard cup fractions — used to check if a tbsp amount maps to a clean cup measure.
+    var STANDARD_CUP_FRACS = [
+        [1 / 4, "\u00BC"],
+        [1 / 3, "\u2153"],
+        [1 / 2, "\u00BD"],
+        [2 / 3, "\u2154"],
+        [3 / 4, "\u00BE"],
+    ];
+
     function isCupUnit(unit) {
         return /^cups?\.?$/i.test((unit || "").trim());
+    }
+
+    function isTbspUnit(unit) {
+        return /^(tbsps?|tablespoons?)\.?$/i.test((unit || "").trim());
+    }
+
+    function isTspUnit(unit) {
+        return /^(tsps?|teaspoons?)\.?$/i.test((unit || "").trim());
     }
 
     function getCupConversion(amount, unit) {
@@ -64,6 +81,53 @@
         return null;
     }
 
+    // Upward: tbsp → cups (16 tbsp = 1 cup), only for clean cup fractions.
+    function getTbspToCupConversion(amount, unit) {
+        if (!isTbspUnit(unit)) return null;
+        if (amount < 4 - 0.3) return null; // minimum 1/4 cup = 4 tbsp
+
+        var cups = amount / 16;
+        var whole = Math.floor(cups);
+        var frac = cups - whole;
+
+        // Check if it's a whole number of cups
+        if (frac < 0.01) {
+            return whole + (whole === 1 ? " cup" : " cups");
+        }
+
+        // Check for standard fractions
+        for (var i = 0; i < STANDARD_CUP_FRACS.length; i++) {
+            if (Math.abs(frac - STANDARD_CUP_FRACS[i][0]) < 0.03) {
+                var fracStr = STANDARD_CUP_FRACS[i][1];
+                if (whole > 0) {
+                    return whole + fracStr + (whole >= 1 ? " cups" : " cup");
+                }
+                return fracStr + " cup";
+            }
+        }
+        return null;
+    }
+
+    // Upward: tsp → tbsp (3 tsp = 1 tbsp), only for clean multiples.
+    function getTspToTbspConversion(amount, unit) {
+        if (!isTspUnit(unit)) return null;
+        if (amount < 3 - 0.3) return null; // minimum 1 tbsp = 3 tsp
+
+        var tbsp = amount / 3;
+        var rounded = Math.round(tbsp);
+        if (Math.abs(tbsp - rounded) > 0.1) return null;
+
+        return rounded + (rounded === 1 ? " tbsp" : " tbsp");
+    }
+
+    function getConversion(amount, unit) {
+        return (
+            getCupConversion(amount, unit) ||
+            getTbspToCupConversion(amount, unit) ||
+            getTspToTbspConversion(amount, unit)
+        );
+    }
+
     function escapeHtml(str) {
         var div = document.createElement("div");
         div.textContent = str;
@@ -84,7 +148,7 @@
 
             var scaledAmount = parsed.amount * scale;
             var scaledMax = parsed.amount_max ? parsed.amount_max * scale : null;
-            var conversion = getCupConversion(scaledAmount, parsed.unit);
+            var conversion = getConversion(scaledAmount, parsed.unit);
 
             if (conversion) {
                 textEl.innerHTML = formatIngredientHtml(
