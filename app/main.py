@@ -77,7 +77,7 @@ async def recipe(request: Request, url: str = ""):
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
     try:
-        result = await parse_recipe(url)
+        result = await parse_recipe(url, request_host=request.url.hostname)
     except ParseError as e:
         logger.warning("ParseError [%s] for %s: %s", e.error_type, url, e.message)
         return templates.TemplateResponse(
