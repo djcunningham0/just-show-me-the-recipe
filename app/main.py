@@ -71,7 +71,10 @@ async def recipe(request: Request, url: str = ""):
         return templates.TemplateResponse(
             request,
             "error.html",
-            {"error_message": "Please enter a URL to extract a recipe from.", "url": ""},
+            {
+                "error_message": "Please enter a URL to extract a recipe from.",
+                "url": "",
+            },
             status_code=400,
         )
     if not url.startswith(("http://", "https://")):
