@@ -71,7 +71,7 @@ async def recipe(request: Request, url: str = ""):
         return templates.TemplateResponse(
             request,
             "error.html",
-            {"error_message": "Please enter a URL to extract a recipe from."},
+            {"error_message": "Please enter a URL to extract a recipe from.", "url": ""},
             status_code=400,
         )
     if not url.startswith(("http://", "https://")):
@@ -81,7 +81,7 @@ async def recipe(request: Request, url: str = ""):
     except ParseError as e:
         logger.warning("ParseError [%s] for %s: %s", e.error_type, url, e.message)
         return templates.TemplateResponse(
-            request, "error.html", {"error_message": e.message}
+            request, "error.html", {"error_message": e.message, "url": url}
         )
     logger.info("Served recipe %r from %s", result.title, url)
     parsed_ingredients_json = ""

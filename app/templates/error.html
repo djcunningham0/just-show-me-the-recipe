@@ -4,5 +4,8 @@ endblock %} {% block content %}
     <h1>Couldn't get that recipe</h1>
     <p>{{ error_message }}</p>
     <a href="/" class="button">Try another URL</a>
+    <p class="report-link">
+        Unexpected error? <a href="https://docs.google.com/forms/d/e/1FAIpQLSeaYTPR_95GR6A-ivcqgxzfzDhVXTFHSLk_s8gdWWbPUlcehA/viewform?usp=pp_url&entry.2141940194={{ url | urlencode }}" target="_blank" rel="noopener">Report an issue</a>
+    </p>
 </div>
 {% endblock %}

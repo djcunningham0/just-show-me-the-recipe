@@ -60,6 +60,9 @@ Recipe!{% endblock %} {% block content %}
             </ol>
         </section>
     </div>
+    <p class="report-link">
+        Something wrong? <a href="https://docs.google.com/forms/d/e/1FAIpQLSeaYTPR_95GR6A-ivcqgxzfzDhVXTFHSLk_s8gdWWbPUlcehA/viewform?usp=pp_url&entry.2141940194={{ recipe.source_url | urlencode }}" target="_blank" rel="noopener">Report an issue</a>
+    </p>
 </article>
 
 {% if recipe.parsed_ingredients %}
