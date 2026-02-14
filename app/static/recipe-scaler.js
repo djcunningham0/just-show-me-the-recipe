@@ -200,6 +200,8 @@
         var tipContent =
             '<span class="conversion-tip" data-tip="' +
             tipLabel +
+            '" data-tip-short="= ' +
+            escapeHtml(conversion) +
             '">' +
             escapeHtml(amountStr) +
             (parsed.unit ? " " + escapeHtml(parsed.unit) : "") +
